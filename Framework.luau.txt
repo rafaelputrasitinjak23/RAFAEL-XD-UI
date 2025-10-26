@@ -1416,6 +1416,80 @@ function Library:Window(p)
 		DefaultIndex = 1
 	}
 
+function Tabs:HorizontalSelector(config)
+    local options = config.Options or {}
+    local default = config.Default or options[1] or "Option"
+    local callback = config.Callback or function() end
+
+    -- Buat container scrollable
+    local Scroll = Instance.new("ScrollingFrame")
+    Scroll.Size = UDim2.new(1, 0, 0, 40)
+    Scroll.CanvasSize = UDim2.new(0, #options * 110, 0, 40)
+    Scroll.ScrollBarThickness = 2
+    Scroll.BackgroundTransparency = 1
+    Scroll.ScrollingDirection = Enum.ScrollingDirection.X
+    Scroll.AutomaticCanvasSize = Enum.AutomaticSize.None
+    Scroll.ClipsDescendants = true
+    Scroll.Parent = self.Content or self.Container or self.Holder or self.Frame or self.Section
+
+    local UIList = Instance.new("UIListLayout")
+    UIList.FillDirection = Enum.FillDirection.Horizontal
+    UIList.Padding = UDim.new(0, 6)
+    UIList.Parent = Scroll
+
+    local CurrentValue = Instance.new("StringValue")
+    CurrentValue.Value = default
+    local Buttons = {}
+
+    for _, opt in ipairs(options) do
+        local Btn = Instance.new("TextButton")
+        Btn.Size = UDim2.new(0, 100, 1, -5)
+        Btn.Text = opt
+        Btn.Font = Enum.Font.GothamBold
+        Btn.TextSize = 14
+        Btn.BackgroundColor3 = opt == default and Color3.fromRGB(50, 150, 255) or Color3.fromRGB(40, 40, 40)
+        Btn.TextColor3 = Color3.new(1, 1, 1)
+        Btn.AutoButtonColor = true
+        Btn.Parent = Scroll
+
+        Btn.MouseButton1Click:Connect(function()
+            for _, b in ipairs(Buttons) do
+                b.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            end
+            Btn.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
+            CurrentValue.Value = opt
+            callback(opt)
+        end)
+
+        table.insert(Buttons, Btn)
+    end
+
+    local API = {}
+
+    function API:Get()
+        return CurrentValue.Value
+    end
+
+    function API:Set(opt)
+        for _, b in ipairs(Buttons) do
+            if b.Text == opt then
+                b.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
+                CurrentValue.Value = opt
+                callback(opt)
+            else
+                b.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            end
+        end
+    end
+
+    function API:OnChanged(fn)
+        callback = fn
+    end
+
+    API:Set(default)
+    return API
+end
+
 	function Tabs:SelectTab(p)
 		Tabs.DefaultIndex = p or 1
 	end
